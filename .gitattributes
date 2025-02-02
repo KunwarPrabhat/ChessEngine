@@ -1,2 +1,3 @@
 # Ignore SDL2 library files for language stats
 src/include/SDL2/* linguist-vendored
+src/lib/* linguist-vendored
