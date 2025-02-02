@@ -2,85 +2,82 @@
 #include <iostream>
 #include <string>
 
-// Screen dimensions for the window
-const int SCREEN_WIDTH = 800;
-const int SCREEN_HEIGHT = 800;
+// Chessboard dimensions
+const int BOARD_SIZE = 8;
+const int SQUARE_SIZE = 100;  // Size of each square in pixels
 
-// This function is responsible for rendering the chessboard
+// Function to render the board (background)
 void renderBoard(SDL_Renderer* renderer, SDL_Texture* boardTexture) {
-    // Define the source and destination rectangles for rendering the board
-    SDL_Rect srcRect = {0, 0, 800, 800};  // Source rectangle (whole image)
-    SDL_Rect destRect = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};  // Destination rectangle (on-screen position)
-    
-    // Render the chessboard image onto the screen
-    SDL_RenderCopy(renderer, boardTexture, &srcRect, &destRect);
+    SDL_Rect srcRect = {0, 0, 800, 800};  // Define the entire board image
+    SDL_Rect destRect = {0, 0, BOARD_SIZE * SQUARE_SIZE, BOARD_SIZE * SQUARE_SIZE};  // Destination rectangle for rendering
+
+    SDL_RenderCopy(renderer, boardTexture, &srcRect, &destRect);  // Render the board texture
 }
 
-// Main function for the program
+// SDL_main - SDL's entry point (instead of the regular main)
 int SDL_main(int argc, char* argv[]) {
-    // Initialize SDL for video
+    // Initialize SDL
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         std::cerr << "SDL could not initialize! SDL_Error: " << SDL_GetError() << std::endl;
-        return -1;  // Return with error code if initialization fails
+        return -1;
     }
 
-    // Create a window for the chessboard
-    SDL_Window* window = SDL_CreateWindow("Chessboard with SDL", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 
-                                          SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+    // Create window with size based on the chessboard (8x8 grid, each square is SQUARE_SIZE)
+    SDL_Window* window = SDL_CreateWindow("Chessboard with SDL", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+                                          BOARD_SIZE * SQUARE_SIZE, BOARD_SIZE * SQUARE_SIZE, SDL_WINDOW_SHOWN);
     if (window == nullptr) {
         std::cerr << "Window could not be created! SDL_Error: " << SDL_GetError() << std::endl;
         SDL_Quit();
-        return -1;  // Return with error code if window creation fails
+        return -1;
     }
 
-    // Create a renderer to render graphics on the window
+    // Create renderer
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (renderer == nullptr) {
         std::cerr << "Renderer could not be created! SDL_Error: " << SDL_GetError() << std::endl;
         SDL_DestroyWindow(window);
         SDL_Quit();
-        return -1;  // Return with error code if renderer creation fails
+        return -1;
     }
 
-    // Load the chessboard image (this will be the background of the window)
-    SDL_Surface* boardSurface = SDL_LoadBMP("images/board.bmp");  // Load the image as surface (use SDL_image for PNG)
+    // Load the chessboard image (replace with the correct path)
+    SDL_Surface* boardSurface = SDL_LoadBMP("images/board0.bmp");  // Use .bmp or .png with SDL_image
     if (boardSurface == nullptr) {
         std::cerr << "Failed to load board image! SDL_Error: " << SDL_GetError() << std::endl;
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
         SDL_Quit();
-        return -1;  // Return with error code if image loading fails
+        return -1;
     }
-    SDL_Texture* boardTexture = SDL_CreateTextureFromSurface(renderer, boardSurface);  // Convert surface to texture
-    SDL_FreeSurface(boardSurface);  // Free the surface after conversion
+    SDL_Texture* boardTexture = SDL_CreateTextureFromSurface(renderer, boardSurface);
+    SDL_FreeSurface(boardSurface);
 
-    // Main game loop to keep the window open and refresh
+    // Main loop
     bool quit = false;
-    SDL_Event e;  // Event variable to handle user input and events
+    SDL_Event e;
     while (!quit) {
-        // Handle all incoming events (like closing the window)
         while (SDL_PollEvent(&e) != 0) {
-            if (e.type == SDL_QUIT) {  // If the user clicks the close button
-                quit = true;  // Set quit to true to end the loop
+            if (e.type == SDL_QUIT) {
+                quit = true;
             }
         }
 
-        // Clear the screen with a white background
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);  // Set color to white
-        SDL_RenderClear(renderer);  // Clear the screen
+        // Clear the screen
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);  // White background
+        SDL_RenderClear(renderer);
 
-        // Draw the chessboard onto the screen
+        // Render the chessboard (no pieces, just the board)
         renderBoard(renderer, boardTexture);
 
-        // Show everything we've rendered so far
+        // Present the renderer
         SDL_RenderPresent(renderer);
     }
 
     // Clean up and close the program
-    SDL_DestroyTexture(boardTexture);  // Free the board texture
-    SDL_DestroyRenderer(renderer);  // Destroy the renderer
-    SDL_DestroyWindow(window);  // Destroy the window
-    SDL_Quit();  // Quit SDL
+    SDL_DestroyTexture(boardTexture);
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
 
-    return 0;  // Successfully exit the program
+    return 0;
 }
