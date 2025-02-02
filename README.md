@@ -1,6 +1,6 @@
 ## An ongoing project on my custom chess engine using c++ and SDL library.
-
-### Things so far-
+  ### imp - Must install the mingw32-make for build.
+### Things so far :-
   - prints a chess board on a console.
 
 ### Planned Features
