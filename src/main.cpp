@@ -74,7 +74,7 @@ int SDL_main(int argc, char* argv[]) {
     }
 
     // Load the chessboard image (replace with the correct path)
-    SDL_Surface* boardSurface = SDL_LoadBMP("images/board0.bmp");  // Use .bmp or .png with SDL_image
+    SDL_Surface* boardSurface = SDL_LoadBMP("images/board.bmp");  // Use .bmp or .png with SDL_image
     if (boardSurface == nullptr) {
         std::cerr << "Failed to load board image! SDL_Error: " << SDL_GetError() << std::endl;
         SDL_DestroyRenderer(renderer);
