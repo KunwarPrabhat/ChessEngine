@@ -5,13 +5,46 @@
 // Chessboard dimensions
 const int BOARD_SIZE = 8;
 const int SQUARE_SIZE = 100;  // Size of each square in pixels
+const int PIECE_WIDTH = 150;  // Calculated piece width
+const int PIECE_HEIGHT = 150;
 
+int board[8][8] = {
+    -1, -2, -3, -4, -5, -3, -2, -1,
+    -6, -6, -6, -6, -6, -6, -6, -6,
+     0,  0,  0,  0,  0,  0,  0,  0,
+     0,  0,  0,  0,  0,  0,  0,  0,
+     0,  0,  0,  0,  0,  0,  0,  0,
+     0,  0,  0,  0,  0,  0,  0,  0,
+     6,  6,  6,  6,  6,  6,  6,  6,
+     1,  2,  3,  4,  5,  3,  2,  1
+};
 // Function to render the board (background)
 void renderBoard(SDL_Renderer* renderer, SDL_Texture* boardTexture) {
     SDL_Rect srcRect = {0, 0, 800, 800};  // Define the entire board image
     SDL_Rect destRect = {0, 0, BOARD_SIZE * SQUARE_SIZE, BOARD_SIZE * SQUARE_SIZE};  // Destination rectangle for rendering
 
     SDL_RenderCopy(renderer, boardTexture, &srcRect, &destRect);  // Render the board texture
+}
+void renderPieces(SDL_Renderer* renderer, SDL_Texture* piecesTexture) {
+    SDL_Rect srcRect = {0, 0, PIECE_WIDTH, PIECE_HEIGHT};  
+    SDL_Rect destRect = {0, 0, SQUARE_SIZE, SQUARE_SIZE};  // Scale to fit the board squares
+
+    for(int i = 0; i < 8; i++){
+        for(int j = 0; j < 8; j++){
+            if(board[i][j] != 0) {
+                srcRect.x = (abs(board[i][j]) - 1) * PIECE_WIDTH;
+                srcRect.y = (board[i][j] > 0) ? PIECE_HEIGHT : 0;
+
+                // Scale the piece to fit within the square
+                destRect.x = j * SQUARE_SIZE;
+                destRect.y = i * SQUARE_SIZE;
+                destRect.w = SQUARE_SIZE;  // Scale width to fit the square
+                destRect.h = SQUARE_SIZE;  // Scale height to fit the square
+
+                SDL_RenderCopy(renderer, piecesTexture, &srcRect, &destRect);  
+            }
+        }
+    }
 }
 
 // SDL_main - SDL's entry point (instead of the regular main)
@@ -52,6 +85,17 @@ int SDL_main(int argc, char* argv[]) {
     SDL_Texture* boardTexture = SDL_CreateTextureFromSurface(renderer, boardSurface);
     SDL_FreeSurface(boardSurface);
 
+    SDL_Surface* piecesSurface = SDL_LoadBMP("images/spriteSheet.bmp");
+    if (piecesSurface == nullptr) {
+        std::cerr << "Failed to load pieces image! SDL_Error: " << SDL_GetError() << std::endl;
+        SDL_DestroyTexture(boardTexture);
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+        return -1;
+    }
+    SDL_Texture* piecesTexture = SDL_CreateTextureFromSurface(renderer, piecesSurface);
+    SDL_FreeSurface(piecesSurface);
     // Main loop
     bool quit = false;
     SDL_Event e;
@@ -69,11 +113,15 @@ int SDL_main(int argc, char* argv[]) {
         // Render the chessboard (no pieces, just the board)
         renderBoard(renderer, boardTexture);
 
+        // Render the pieces
+        renderPieces(renderer, piecesTexture);
+
         // Present the renderer
         SDL_RenderPresent(renderer);
     }
 
     // Clean up and close the program
+    SDL_DestroyTexture(piecesTexture);
     SDL_DestroyTexture(boardTexture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
