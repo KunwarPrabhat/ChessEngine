@@ -1,6 +1,7 @@
 #include <SDL.h>
 #include <iostream>
 #include <string>
+#include "move.cpp"
 
 // Chessboard dimensions
 const int BOARD_SIZE = 8;
@@ -101,6 +102,7 @@ int SDL_main(int argc, char* argv[]) {
     SDL_Event e;
     while (!quit) {
         while (SDL_PollEvent(&e) != 0) {
+            handleEvents(e, board); 
             if (e.type == SDL_QUIT) {
                 quit = true;
             }
