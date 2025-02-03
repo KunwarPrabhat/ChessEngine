@@ -13,7 +13,6 @@ $ ./main.exe
   - prints a chess board with it's pieces using texture rendering with SDL library.
 
 ### Planned Features
-- Print the chess pieces and set up the coordinates.
 - Implement piece movement logic.
 - Add move validation and legality checks.
 - Introduce AI logic to play moves autonomously.
