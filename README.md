@@ -7,7 +7,7 @@ $ git clone https://github.com/KunwarPrabhat/ChessEngine
 $ cd ChessEngine
 $ cd src
 $ mingw32-make
-$ ./main.exe
+$ main.exe
 ```
 ### Things so far :-
   - prints a chess board with it's pieces using texture rendering with SDL library.
