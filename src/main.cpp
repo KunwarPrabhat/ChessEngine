@@ -43,7 +43,7 @@ void renderPieces(SDL_Renderer* renderer, SDL_Texture* piecesTexture) {
 
                 SDL_RenderCopy(renderer, piecesTexture, &srcRect, &destRect);  
             }
-        }
+        }   
     }
 }
 
