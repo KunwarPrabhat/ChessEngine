@@ -1,7 +1,16 @@
 ## An ongoing project on my custom chess engine using c++ and SDL library.
-  ### imp - Must install the mingw32-make for build.
+## How to run(for mingw vs code) :-
+- Download and run "mingw32-make-3.80.0-3.exe" to default mingw location.
+- Open terminal and follow up these commands.
+```sh
+$ git clone https://github.com/KunwarPrabhat/ChessEngine
+$ cd ChessEngine
+$ cd src
+$ mingw32-make
+$ ./main.exe
+```
 ### Things so far :-
-  - prints a chess board on a console.
+  - prints a chess board with it's pieces using texture rendering with SDL library.
 
 ### Planned Features
 - Print the chess pieces and set up the coordinates.
