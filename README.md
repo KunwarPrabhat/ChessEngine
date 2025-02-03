@@ -11,6 +11,7 @@ $ main.exe
 ```
 ### Things so far :-
   - prints a chess board with it's pieces using texture rendering with SDL library.
+  - User can drag and drop the pieces over the chess board.
 
 ### Planned Features
 - Implement piece movement logic.
