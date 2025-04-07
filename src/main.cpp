@@ -46,6 +46,20 @@ void renderPieces(SDL_Renderer* renderer, SDL_Texture* piecesTexture) {
             }
         }   
     }
+    if(isDragging) {
+        int mouseX, mouseY;
+        SDL_GetMouseState(&mouseX, &mouseY);
+
+        srcRect.x = (abs(selectedPiece)-1)* PIECE_WIDTH;
+        srcRect.y = (selectedPiece > 0) ? PIECE_HEIGHT : 0;
+
+        destRect.x = mouseX - mouseOffset.x;
+        destRect.y = mouseY - mouseOffset.y;
+        destRect.w = SQUARE_SIZE;
+        destRect.h = SQUARE_SIZE;
+
+        SDL_RenderCopy(renderer, piecesTexture, &srcRect, &destRect);
+    }
 }
 
 // SDL_main - SDL's entry point (instead of the regular main)
