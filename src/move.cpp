@@ -76,6 +76,29 @@ void getPawnMoves(int row, int col, int board[8][8], std::vector<std::pair<int, 
     }
 }
 // ──────────────────────────────
+// Move Generator: Knight
+// ──────────────────────────────
+void getKnightMoves(int row, int col, int board[8][8], std::vector<std::pair<int, int>>& moves) {
+    int piece = board[row][col];
+    int knightMoves[8][2] = {
+        { 2, 1}, {1, 2}, {-1, 2}, {-2, 1},
+        {-2, -1}, {-1, -2}, {1, -2}, {2, -1}
+    };
+    for(int i = 0; i < 8; i++){
+        int newRow = row + knightMoves[i][0];
+        int newCol = col + knightMoves[i][1];
+        if(newRow >=0 && newRow < 8 && newCol >=0 && newCol < 8 ){
+            if(board[newRow][newCol] == 0){
+                //empty
+                moves.push_back({newRow, newCol});
+            }else if((board[newRow][newCol] < 0 && piece > 0) || (board[newRow][newCol] > 0 && piece < 0)) {
+                //occupied
+                moves.push_back({newRow, newCol});
+            }
+        }
+    }
+}
+// ──────────────────────────────
 // Dispatcher: Legal Moves
 // ──────────────────────────────
 std::vector<std::pair<int, int>> getLegalMoves(int row, int col, int board[8][8]) {
@@ -87,6 +110,7 @@ std::vector<std::pair<int, int>> getLegalMoves(int row, int col, int board[8][8]
               << " (value: " << piece << ")" << std::endl;
 
     switch (abs(piece)) {
+        case 2: getKnightMoves(row, col, board, moves); break;
         case 6: getPawnMoves(row, col, board, moves); break;
         default: break;
     }
