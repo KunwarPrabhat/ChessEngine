@@ -6,6 +6,9 @@
 // ──────────────────────────────
 // Global Variables
 // ──────────────────────────────
+bool WhiteKingMoved = false, BlackKingMoved = false;
+bool WhiteKingsideRookMoved = false, WhiteQueensideRookMoved = false;
+bool BlackKingsideRookMoved = false, BlackQueensideRookMoved = false;
 bool isDragging = false;
 int selectedPiece = -1;
 int startCol, startRow;
@@ -202,6 +205,81 @@ void getRookMoves(int row, int col, int board[8][8], std::vector<std::pair<int, 
     }
 }
 // ──────────────────────────────
+// Move Generator: queen
+// ──────────────────────────────
+void getQueenMoves(int row, int col, int board[8][8], std::vector<std::pair<int,int>>& moves){
+    int piece = board[row][col];
+    int directions[8][2] = {{1,0}, {0,1}, {-1,0}, {0,-1}, {1,1}, {1,-1}, {-1,1}, {-1,-1}};
+    if(piece == 0) return;
+
+    for(int d = 0; d < 8; d++){
+        int dx = directions[d][0];
+        int dy = directions[d][1];
+        for(int i = 1; i<8; i++){
+            int newRow = row + dx*i;
+            int newCol = col + dy*i;
+
+            if (newRow < 0 || newRow >= 8 || newCol < 0 || newCol >= 8)
+            break;
+            if (board[newRow][newCol] == 0) {
+                moves.push_back({newRow, newCol});
+            }else if ((piece > 0 && board[newRow][newCol] < 0) || (piece < 0 && board[newRow][newCol] > 0)) {
+                moves.push_back({newRow, newCol});
+                break;
+            }
+            else {
+                break;
+            }
+        } 
+    }
+}
+// ──────────────────────────────
+// Move Generator: King
+// ──────────────────────────────
+void getKingMoves(int row, int col, int board[8][8], std::vector<std::pair<int,int>>& moves){
+
+    int piece = board[row][col];
+    int directions[8][2] = {{1,0}, {0,1}, {-1,0}, {0,-1}, {1,1}, {1,-1}, {-1,1}, {-1,-1}};
+    if(piece == 0) return;
+    for (int d = 0; d < 8; d++) {
+        int newRow = row + directions[d][0];
+        int newCol = col + directions[d][1];
+        if (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8) {
+            if (board[newRow][newCol] == 0 || 
+               (piece > 0 && board[newRow][newCol] < 0) || 
+               (piece < 0 && board[newRow][newCol] > 0)) {
+                moves.push_back({newRow, newCol});
+            }
+            // ──────────────────────────────
+            //Castling logic for white king
+            // ──────────────────────────────
+            if(!WhiteKingMoved && row == 7 && col ==4){
+                //kingside
+                if(!WhiteKingsideRookMoved && board[7][5] == 0 && board[7][6] ==0) {
+                    moves.push_back({7,6});
+                }
+                //queenside
+                if(!WhiteQueensideRookMoved && board[7][3] ==0 && board[7][2] == 0 && board[7][1] == 0){
+                    moves.push_back({7,2});
+                }
+            }
+            // ──────────────────────────────
+            //Castling logic for Black king
+            // ──────────────────────────────
+            if(!BlackKingMoved && row == 0 && col == 4){
+                //kingside
+                if(!BlackKingsideRookMoved && board[0][5] == 0 && board[0][6] ==0) {
+                    moves.push_back({0,6});
+                }
+                //queenside
+                if(!BlackQueensideRookMoved && board[0][3] ==0 && board[0][2] == 0 && board[0][1] == 0){
+                    moves.push_back({0,2});
+                }
+            }
+        }
+    }
+}
+// ──────────────────────────────
 // Dispatcher: Legal Moves
 // ──────────────────────────────
 std::vector<std::pair<int, int>> getLegalMoves(int row, int col, int board[8][8]) {
@@ -216,6 +294,8 @@ std::vector<std::pair<int, int>> getLegalMoves(int row, int col, int board[8][8]
         case 1: getRookMoves(row, col, board, moves); break;
         case 2: getKnightMoves(row, col, board, moves); break;
         case 3: getBishopMoves(row, col, board, moves); break;
+        case 4: getQueenMoves(row, col, board, moves); break;
+        case 5: getKingMoves(row, col, board, moves); break;
         case 6: getPawnMoves(row, col, board, moves); break;
         default: break;
     }
@@ -270,6 +350,26 @@ void handleEvents(SDL_Event& e, int board[8][8]) {
         }
 
         if (isLegalMove) {
+            // White Kingside Castling {moving the rook to (7,5) when the king is moved to (7,6)}
+            if (selectedPiece == 5 && startRow == 7 && startCol == 4 && row == 7 && col == 6) {
+            board[7][5] = board[7][7];
+            board[7][7] = 0;
+            }
+            //White QueenSide Castling {moving the rook to (7,3) when the king is moved to (7,2)}
+            if (selectedPiece == 5 && startRow == 7 && startCol == 4 && row == 7 && col == 2) {
+                board[7][3] = board[7][0];  // Move rook from a1 to d1
+                board[7][0] = 0;
+            }
+            // Black Kingside Castling {moving the rook to (0,5) when the king is moved to (0,6)}
+            if (selectedPiece == -5 && startRow == 0 && startCol == 4 && row == 0 && col == 6) {
+                board[0][5] = board[0][7];
+                board[0][7] = 0;
+            }
+            //Black QueenSide Castling {moving the rook to (0,3) when the king is moved to (0,2)}
+            if (selectedPiece == -5 && startRow == 0 && startCol == 4 && row == 0 && col == 2) {
+                board[0][3] = board[0][0];  // Move rook from a1 to d1
+                board[0][0] = 0;
+            }
             board[row][col] = selectedPiece;
             std::string move = pieceToSymbol(selectedPiece) + toChessNotation(col, row);
             std::cout << "Move: " << move << std::endl;
