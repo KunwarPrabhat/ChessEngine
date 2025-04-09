@@ -9,13 +9,17 @@ $ cd src
 $ mingw32-make
 $ main.exe
 ```
-### Things so far :-
+### So far :-
   - prints a chess board with it's pieces using texture rendering with SDL library.
   - User can drag and drop the pieces over the chess board.
+  - pices now follow their legal moves basied on chess rules.
 
-### Planned Features
-- Implement piece movement logic.
-- Add move validation and legality checks.
+### Things To Add :-
+- Implement piece movement logic. {Done}
+- Add move validation and legality checks. {Done}
+- Implement Kingside & QueenSide Castling. {Done}
+- Implement Special move En passant.
+- Implement pawn promotion. 
 - Introduce AI logic to play moves autonomously.
 - Improve the engine’s playing strength over time.
 - Optimize performance for speed and efficiency.
