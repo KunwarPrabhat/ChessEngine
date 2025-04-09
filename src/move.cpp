@@ -99,6 +99,109 @@ void getKnightMoves(int row, int col, int board[8][8], std::vector<std::pair<int
     }
 }
 // ──────────────────────────────
+// Move Generator: Bishop
+// ──────────────────────────────
+void getBishopMoves(int row, int col, int board[8][8], std::vector<std::pair<int, int>>& moves){
+    int piece = board[row][col];
+    if (piece == 0) return;
+
+    // Four diagonal directions: NE, NW, SE, SW
+    // int directions[4][2] = {{1,1}, {1,-1}, {-1,1}, {-1,-1}}; //will use later during code optimization.
+
+    for(int i = 1; i < 8; i++){
+        int newRow = row + i;
+        int newCol = col + i;
+        if (newRow >=0 && newRow < 8 && newCol >=0 && newCol < 8){
+            if(board[newRow][newCol] == 0){
+                //empty
+                moves.push_back({newRow, newCol});
+            }else if ((board[newRow][newCol] < 0 && piece > 0) || (board[newRow][newCol] > 0 && piece < 0)){
+                moves.push_back({newRow, newCol});
+                break; //this is important so that the bishop doesn't jump over other pieces.
+            }
+            else {
+                break; // friendly piece blocks
+            }
+        }
+    }
+    for(int i = 1; i < 8; i++){
+        int newRow = row + i;
+        int newCol = col - i;
+        if (newRow >=0 && newRow < 8 && newCol >=0 && newCol < 8){
+            if(board[newRow][newCol] == 0){
+                //empty
+                moves.push_back({newRow, newCol});
+            }else if ((board[newRow][newCol] < 0 && piece > 0) || (board[newRow][newCol] > 0 && piece < 0)){
+                moves.push_back({newRow, newCol});
+                break; //this is important so that the bishop doesn't jump over other pieces.
+            }
+            else {
+                break; // friendly piece blocks
+            }
+        }
+    }
+    for(int i = 1; i < 8; i++){
+        int newRow = row - i;
+        int newCol = col + i;
+        if (newRow >=0 && newRow < 8 && newCol >=0 && newCol < 8){
+            if(board[newRow][newCol] == 0){
+                //empty
+                moves.push_back({newRow, newCol});
+            }else if ((board[newRow][newCol] < 0 && piece > 0) || (board[newRow][newCol] > 0 && piece < 0)){
+                moves.push_back({newRow, newCol});
+                break; //this is important so that the bishop doesn't jump over other pieces.
+            }
+            else {
+                break; // friendly piece blocks
+            }
+        }
+    }
+    for(int i = 1; i < 8; i++){
+        int newRow = row - i;
+        int newCol = col - i;
+        if (newRow >=0 && newRow < 8 && newCol >=0 && newCol < 8){
+            if(board[newRow][newCol] == 0){
+                //empty
+                moves.push_back({newRow, newCol});
+            }else if ((board[newRow][newCol] < 0 && piece > 0) || (board[newRow][newCol] > 0 && piece < 0)){
+                moves.push_back({newRow, newCol});
+                break; //this is important so that the bishop doesn't jump over other pieces.
+            }
+            else {
+                break; // friendly piece blocks
+            }
+        }
+    }
+}
+// ──────────────────────────────
+// Move Generator: Rook
+// ──────────────────────────────
+void getRookMoves(int row, int col, int board[8][8], std::vector<std::pair<int, int>>& moves){
+    int piece = board[row][col];
+    if (piece == 0) return;
+    int directions[4][2] = {{1,0}, {0,1}, {-1,0}, {0,-1}};
+    for (int d = 0; d < 4; d++) {
+        int dx = directions[d][0];
+        int dy = directions[d][1];
+        for(int i = 1; i<8; i++){
+            int newRow = row + dx*i;
+            int newCol = col + dy*i;
+
+            if (newRow < 0 || newRow >= 8 || newCol < 0 || newCol >= 8)
+            break;
+            if (board[newRow][newCol] == 0) {
+                moves.push_back({newRow, newCol});
+            }else if ((piece > 0 && board[newRow][newCol] < 0) || (piece < 0 && board[newRow][newCol] > 0)) {
+                moves.push_back({newRow, newCol});
+                break;
+            }
+            else {
+                break;
+            }
+        } 
+    }
+}
+// ──────────────────────────────
 // Dispatcher: Legal Moves
 // ──────────────────────────────
 std::vector<std::pair<int, int>> getLegalMoves(int row, int col, int board[8][8]) {
@@ -110,7 +213,9 @@ std::vector<std::pair<int, int>> getLegalMoves(int row, int col, int board[8][8]
               << " (value: " << piece << ")" << std::endl;
 
     switch (abs(piece)) {
+        case 1: getRookMoves(row, col, board, moves); break;
         case 2: getKnightMoves(row, col, board, moves); break;
+        case 3: getBishopMoves(row, col, board, moves); break;
         case 6: getPawnMoves(row, col, board, moves); break;
         default: break;
     }
