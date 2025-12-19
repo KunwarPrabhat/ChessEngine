@@ -182,7 +182,7 @@ Depth 5  ███████████████████████�
 
 ## Performance Visualization
 
-The image below shows a performance-related visualization, tested with 2000 elo bot on chess.com this is how my model performed hitting approx 1500 el. With further optimizations and move tables it should easily reach 2000 elo.
+The image below shows a performance-related visualization, tested with 2000 elo bot on chess.com this is how my model performed hitting approx 1500 elo. With further optimizations and move tables it should easily reach 2000 elo.
 
 ![Engine Performance](performance.png)
 
