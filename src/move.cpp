@@ -2,53 +2,74 @@
 #include <iostream>
 #include <vector>
 #include <string>
-
+#include <cmath>
 // ──────────────────────────────
 // Global Variables
 // ──────────────────────────────
-bool WhiteKingMoved = false, BlackKingMoved = false;
-bool WhiteKingsideRookMoved = false, WhiteQueensideRookMoved = false;
-bool BlackKingsideRookMoved = false, BlackQueensideRookMoved = false;
-bool isDragging = false;
-int selectedPiece = -1;
-int startCol, startRow;
-SDL_Point mouseOffset;
-std::vector<std::pair<int, int>> legalMoves;
+extern bool WhiteKingMoved;
+extern bool BlackKingMoved;
+extern bool WhiteKingsideRookMoved;
+extern bool WhiteQueensideRookMoved;
+extern bool BlackKingsideRookMoved;
+extern bool BlackQueensideRookMoved;
 
-// ──────────────────────────────
-// Utility: Convert to Chess Notation
-// ──────────────────────────────
-std::string toChessNotation(int col, int row)
-{
-    char file = 'a' + col;
-    char rank = '8' - row;
-    return std::string(1, file) + rank;
-}
-
-// ──────────────────────────────
-// Utility: Convert Piece to Symbol
-// ──────────────────────────────
-char pieceToSymbol(int piece)
-{
-    switch (abs(piece))
-    {
-    case 1:
-        return 'R'; // Rook
-    case 2:
-        return 'N'; // Knight
-    case 3:
-        return 'B'; // Bishop
-    case 4:
-        return 'Q'; // Queen
-    case 5:
-        return 'K'; // King
-    case 6:
-        return ' '; // Pawn
-    default:
-        return '?';
+// ───────────────────────────────────────────
+// Helper function for check detections
+// ───────────────────────────────────────────
+bool isSquareAttacked(int targetRow, int targetCol, bool attackerIsWhite, int board[8][8]) {
+    // 1. Check Pawn Attacks (Pawn direction is inverted for detection)
+    int pawnDir = attackerIsWhite ? -1 : 1; 
+    if (targetRow - pawnDir >= 0 && targetRow - pawnDir < 8) {
+        if (targetCol - 1 >= 0) {
+            int p = board[targetRow - pawnDir][targetCol - 1];
+            if ((attackerIsWhite && p == 6) || (!attackerIsWhite && p == -6)) return true;
+        }
+        if (targetCol + 1 < 8) {
+            int p = board[targetRow - pawnDir][targetCol + 1];
+            if ((attackerIsWhite && p == 6) || (!attackerIsWhite && p == -6)) return true;
+        }
     }
-}
 
+    // 2. Check Knight Attacks
+    int kMoves[8][2] = {{2, 1}, {1, 2}, {-1, 2}, {-2, 1}, {-2, -1}, {-1, -2}, {1, -2}, {2, -1}};
+    for (auto &m : kMoves) {
+        int r = targetRow + m[0], c = targetCol + m[1];
+        if (r >= 0 && r < 8 && c >= 0 && c < 8) {
+            int p = board[r][c];
+            if ((attackerIsWhite && p == 2) || (!attackerIsWhite && p == -2)) return true;
+        }
+    }
+
+    // 3. Check Sliding Attacks (Rook, Bishop, Queen)
+    int dirs[8][2] = {{1,0},{-1,0},{0,1},{0,-1}, {1,1},{1,-1},{-1,1},{-1,-1}};
+    for (int d = 0; d < 8; d++) {
+        for (int i = 1; i < 8; i++) {
+            int r = targetRow + dirs[d][0] * i;
+            int c = targetCol + dirs[d][1] * i;
+            if (r < 0 || r >= 8 || c < 0 || c >= 8) break;
+            
+            int p = board[r][c];
+            if (p != 0) { // Hit a piece
+                // Orthogonal (Rook/Queen)
+                if (d < 4) { 
+                    if (attackerIsWhite && (p == 1 || p == 4)) return true;
+                    if (!attackerIsWhite && (p == -1 || p == -4)) return true;
+                }
+                // Diagonal (Bishop/Queen)
+                else { 
+                    if (attackerIsWhite && (p == 3 || p == 4)) return true;
+                    if (!attackerIsWhite && (p == -3 || p == -4)) return true;
+                }
+                // Also check for King (1 square away)
+                if (i == 1) {
+                    if ((attackerIsWhite && p == 5) || (!attackerIsWhite && p == -5)) return true;
+                }
+                break; // Blocked
+            }
+        }
+    }
+    return false;
+}
 // ──────────────────────────────
 // Move Generator: Pawn
 // ──────────────────────────────
@@ -372,160 +393,55 @@ void getKingMoves(int row, int col, int board[8][8], std::vector<std::pair<int, 
 // ──────────────────────────────
 std::vector<std::pair<int, int>> getLegalMoves(int row, int col, int board[8][8])
 {
-    std::vector<std::pair<int, int>> moves;
+    std::vector<std::pair<int, int>> rawMoves; // Temporary list
     int piece = board[row][col];
-    if (piece == 0)
-        return moves;
+    if (piece == 0) return rawMoves;
 
-    std::cout << "Getting moves for piece at " << row << "," << col
-              << " (value: " << piece << ")" << std::endl;
-
+    // 1. Get Geometry-based moves (Same as before, but into rawMoves)
     switch (abs(piece))
     {
-    case 1:
-        getRookMoves(row, col, board, moves);
-        break;
-    case 2:
-        getKnightMoves(row, col, board, moves);
-        break;
-    case 3:
-        getBishopMoves(row, col, board, moves);
-        break;
-    case 4:
-        getQueenMoves(row, col, board, moves);
-        break;
-    case 5:
-        getKingMoves(row, col, board, moves);
-        break;
-    case 6:
-        getPawnMoves(row, col, board, moves);
-        break;
-    default:
-        break;
+    case 1: getRookMoves(row, col, board, rawMoves); break;
+    case 2: getKnightMoves(row, col, board, rawMoves); break;
+    case 3: getBishopMoves(row, col, board, rawMoves); break;
+    case 4: getQueenMoves(row, col, board, rawMoves); break;
+    case 5: getKingMoves(row, col, board, rawMoves); break;
+    case 6: getPawnMoves(row, col, board, rawMoves); break;
     }
 
-    std::cout << "Found " << moves.size() << " legal moves:" << std::endl;
-    for (const auto &move : moves)
+    // 2. Filter: Remove moves that leave the King in check
+    std::vector<std::pair<int, int>> finalMoves;
+    bool isWhite = (piece > 0);
+
+    for (const auto &move : rawMoves)
     {
-        std::cout << "  -> " << move.first << "," << move.second << std::endl;
-    }
+        int targetRow = move.first;
+        int targetCol = move.second;
+        
+        // A. Make the move temporarily
+        int originalTargetPiece = board[targetRow][targetCol];
+        board[targetRow][targetCol] = piece;
+        board[row][col] = 0;
 
-    return moves;
-}
-
-// ──────────────────────────────
-// Event Handler: Drag & Drop
-// ──────────────────────────────
-void handleEvents(SDL_Event &e, int board[8][8])
-{
-    if (e.type == SDL_MOUSEBUTTONDOWN)
-    {
-        int mouseX = e.button.x;
-        int mouseY = e.button.y;
-        int col = mouseX / 100;
-        int row = mouseY / 100;
-
-        if (board[row][col] != 0)
-        {
-            isDragging = true;
-            selectedPiece = board[row][col];
-            startCol = col;
-            startRow = row;
-
-            // Calculate legal moves BEFORE modifying the board
-            legalMoves = getLegalMoves(row, col, board);
-
-            // Now remove the piece for dragging
-            board[row][col] = 0;
-
-            mouseOffset.x = mouseX - (col * 100);
-            mouseOffset.y = mouseY - (row * 100);
-        }
-    }
-
-    if (e.type == SDL_MOUSEBUTTONUP && isDragging)
-    {
-        int mouseX = e.button.x;
-        int mouseY = e.button.y;
-        int col = mouseX / 100;
-        int row = mouseY / 100;
-
-        bool isLegalMove = false;
-        for (const auto &move : legalMoves)
-        {
-            if (move.first == row && move.second == col)
-            {
-                isLegalMove = true;
-                break;
-            }
-        }
-
-        if (isLegalMove)
-        {
-            if(abs(selectedPiece) == 5){ //5 is for the king
-                if(selectedPiece > 0) WhiteKingMoved = true;
-                else BlackKingMoved = true;
-            }
-            else if (abs(selectedPiece) == 1 ){ //1 is for the Rook
-                if(selectedPiece > 0){
-                    if(startRow == 7 && startCol == 0){ 
-                        WhiteQueensideRookMoved = true;
-                        std::cout << "White queenside (left) rook has moved" << std::endl; //debug statements
-                    }
-                    if(startRow == 7 && startCol == 7){ 
-                        WhiteKingsideRookMoved = true; 
-                        std::cout << "White kingside (right) rook has moved" << std::endl; //debug statements
-                    }
-                    
-
-                } else {
-                    if (startRow == 0 && startCol == 0) {
-                        BlackQueensideRookMoved = true;
-                        std::cout << "Black queenside (left) rook has moved" << std::endl; //debug statements
-                    }
-                    if (startRow == 0 && startCol == 7) {
-                        BlackKingsideRookMoved = true;
-                        std::cout << "Black kingside (right) rook has moved" << std::endl; //debug statements
-                    }
+        // B. Find my King's location
+        int kingRow = -1, kingCol = -1;
+        for(int r=0; r<8; r++) {
+            for(int c=0; c<8; c++) {
+                if(board[r][c] == (isWhite ? 5 : -5)) {
+                    kingRow = r; kingCol = c;
                 }
             }
-
-            // White Kingside Castling {moving the rook to (7,5) when the king is moved to (7,6)}
-            if (selectedPiece == 5 && startRow == 7 && startCol == 4 && row == 7 && col == 6)
-            {
-                board[7][5] = board[7][7];
-                board[7][7] = 0;
-            }
-            // White QueenSide Castling {moving the rook to (7,3) when the king is moved to (7,2)}
-            else if (selectedPiece == 5 && startRow == 7 && startCol == 4 && row == 7 && col == 2)
-            {
-                board[7][3] = board[7][0]; // Move rook from a1 to d1
-                board[7][0] = 0;
-            }
-            // Black Kingside Castling {moving the rook to (0,5) when the king is moved to (0,6)}
-            else if (selectedPiece == -5 && startRow == 0 && startCol == 4 && row == 0 && col == 6)
-            {
-                board[0][5] = board[0][7];
-                board[0][7] = 0;
-            }
-            // Black QueenSide Castling {moving the rook to (0,3) when the king is moved to (0,2)}
-            else if (selectedPiece == -5 && startRow == 0 && startCol == 4 && row == 0 && col == 2)
-            {
-                board[0][3] = board[0][0]; // Move rook from a1 to d1
-                board[0][0] = 0;
-            }
-            board[row][col] = selectedPiece;
-            std::string move = pieceToSymbol(selectedPiece) + toChessNotation(col, row);
-            std::cout << "Move: " << move << std::endl;
-        }
-        else
-        {
-            // Put the piece back to its original square if move is illegal
-            board[startRow][startCol] = selectedPiece;
         }
 
-        isDragging = false;
-        selectedPiece = -1; // Reset selected piece
+        // C. Check if King is attacked (Pass !isWhite because we check if ENEMY attacks us)
+        if (kingRow != -1 && !isSquareAttacked(kingRow, kingCol, !isWhite, board)) {
+            finalMoves.push_back(move);
+        }
+
+        // D. Undo the move
+        board[row][col] = piece;
+        board[targetRow][targetCol] = originalTargetPiece;
     }
+
+    return finalMoves;
 }
 
